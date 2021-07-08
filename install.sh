@@ -150,18 +150,6 @@ set_locale() {
     sed -i '/^#'$language'/s/^#//g' /etc/locale.gen >/dev/null 2>>error.txt || error=true
     sed -i '/^#en_US/s/^#//g' /etc/locale.gen >/dev/null 2>>error.txt || error=true
     printf "LANG=%s.UTF-8\n" "$language" > /etc/locale.conf
-    printf "LC_COLLATE=C\n" >> /etc/locale.conf
-    printf "LC_ADDRESS=%s.UTF-8\n" "$locale" >> /etc/locale.conf
-    printf "LC_CTYPE=%s.UTF-8\n" "$language" >> /etc/locale.conf
-    printf "LC_IDENTIFICATION=%s.UTF-8\n" "$language" >> /etc/locale.conf
-    printf "LC_MEASUREMENT=%s.UTF-8\n" "$locale" >> /etc/locale.conf
-    printf "LC_MESSAGES=%s.UTF-8\n" "$language" >> /etc/locale.conf
-    printf "LC_MONETARY=%s.UTF-8\n" "$locale" >> /etc/locale.conf
-    printf "LC_NAME=%s.UTF-8\n" "$language" >> /etc/locale.conf
-    printf "LC_NUMERIC=%s.UTF-8\n" "$locale" >> /etc/locale.conf
-    printf "LC_PAPER=%s.UTF-8\n" "$locale" >> /etc/locale.conf
-    printf "LC_TELEPHONE=%s.UTF-8\n" "$locale" >> /etc/locale.conf
-    printf "LC_TIME=%s.UTF-8\n" "$language" >> /etc/locale.conf
     showresult
 }
 
