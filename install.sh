@@ -308,4 +308,4 @@ else
     install_helper
     install_dotfiles
     enable_service
-fii
+fi
