@@ -16,7 +16,7 @@ else
     bootdev="${disk}1"
     rootdev="${disk}2"
 fi
-for var in disk kernel hostname username timezone locale language aurhelper installdotfiles dotfilesurl multilib swapfilesize
+for var in disk kernel hostname username timezone locale language aurhelper installdotfiles dotfilesurl multilib swapfilesize userpassword rootpassword cryptpassword
 do
     if [[ ! -v $var ]]; then
         echo "Variable $var not set"
@@ -58,9 +58,9 @@ EOF
 # Encryption
 encrypt_disk() {
     echo "Encrypting disk"
-    cryptsetup -q luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 "$rootdev" 2>>error.txt || error=true
+    echo "$cryptpassword" | cryptsetup -q luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 "$rootdev" -
     echo "Opening encrypted disk"
-    cryptsetup -q open "$rootdev" cryptroot 2>>error.txt || error=true
+    echo "$cryptpassword" | cryptsetup -q open "$rootdev" cryptroot -
     mapper="/dev/mapper/cryptroot"
     showresult
 }
@@ -210,12 +210,13 @@ add_user() {
     echo "Adding user"
     useradd -m -G wheel -s /bin/bash "$username" >/dev/null 2>>error.txt || error=true
     sed -i '/^# %wheel ALL=(ALL) ALL/s/^#//g' /etc/sudoers >/dev/null 2>>error.txt || error=true
+    sed -i '/^# %wheel ALL=(ALL) NOPASSWD: ALL/s/^#//g' /etc/sudoers >/dev/null 2>>error.txt || error=true
     printf "Defaults:%s timestamp_timeout=240" "$username" >> /etc/sudoers
     showresult
     echo "Setting user password"
-    passwd "$username"
+    echo "$username:$userpassword" | chpasswd
     echo "Setting root password"
-    passwd
+    echo "root:$rootpassword" | chpasswd
 }
 
 # Installing aur helper
@@ -296,4 +297,5 @@ else
     install_helper
     install_dotfiles
     enable_service
+    sed -i '/%wheel ALL=(ALL) NOPASSWD: ALL/s/^/#/' /etc/sudoers >/dev/null 2>>error.txt || error=true
 fi

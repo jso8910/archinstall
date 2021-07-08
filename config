@@ -10,6 +10,9 @@ installdotfiles=true                                # You need a good AUR helper
 dotfilesurl="https://github.com/jso8910/dotfiles"   # URL of your dotfiles repo (only used if installdotfiles=true
 multilib=true                                       # Enable the multilib repos?
 swapfilesize=16000                                  # Size of swapfile (in MB)
+userpassword="password"                             # User's password (mandatory)
+rootpassword=""                                     # Root password (blank by default)
+cryptpassword="password"                            # Encryption password (mandatory)
 
 # Partition layout example
 # /dev/sda1: /boot
