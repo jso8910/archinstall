@@ -58,9 +58,9 @@ EOF
 # Encryption
 encrypt_disk() {
     echo "Encrypting disk"
-    echo "$cryptpassword" | cryptsetup -q luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 "$rootdev" -
+    echo -n "$cryptpassword" | cryptsetup -q luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 "$rootdev" -
     echo "Opening encrypted disk"
-    echo "$cryptpassword" | cryptsetup -q open "$rootdev" cryptroot -
+    echo -n "$cryptpassword" | cryptsetup -q open "$rootdev" cryptroot -
     mapper="/dev/mapper/cryptroot"
     showresult
 }
@@ -214,9 +214,9 @@ add_user() {
     printf "Defaults:%s timestamp_timeout=240" "$username" >> /etc/sudoers
     showresult
     echo "Setting user password"
-    echo "$username:$userpassword" | chpasswd
+    echo -n "$username:$userpassword" | chpasswd
     echo "Setting root password"
-    echo "root:$rootpassword" | chpasswd
+    echo -n "root:$rootpassword" | chpasswd
 }
 
 # Installing aur helper
