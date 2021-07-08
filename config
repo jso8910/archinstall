@@ -1,0 +1,23 @@
+disk="/dev/nveme0n1"                                # The disk you would like to install arch on (eg /dev/sda or /dev/nvme0n1)
+kernel="linux"                                      # The name of the kernel you would like to install (eg linux, linux-lts, linux-zen)
+hostname="jason"                                    # Hostname of machine
+username="jason"                                    # Username of the main user
+timezone="US/Eastern"                               # /usr/share/zoneinfo/<region>/<location>
+locale="en_US"                                      # Your locale
+language="en_US"                                    # Your language in locale.conf
+aurhelper="paru-bin"                                # Which AUR helper do you want (just installs it from the AUR)
+installdotfiles=true                                # You need a good AUR helper for this because it installs yadm from the AUR
+dotfilesurl="https://github.com/jso8910/dotfiles"   # URL of your dotfiles repo (only used if installdotfiles=true
+multilib=true                                       # Enable the multilib repos?
+swapfilesize=16000                                  # Size of swapfile (in MB)
+
+# Partition layout example
+# /dev/sda1: /boot
+# /dev/sda2: luks cryptroot
+# /dev/mapper/cryptroot: btrfs
+# Top level subvolumes:
+# @: mounted to /
+# @home: mounted to /home
+# @swap: mounted to /.swap
+# @var_log: mounted to /var/log
+# @snapshots: mounted to /.snapshots
