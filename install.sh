@@ -185,6 +185,7 @@ set_initramfs() {
 set_pacconf() {
     echo 'Changes to pacman.conf and makepkg.conf'
     sed -i "s/^#Color/Color/" /etc/pacman.conf >/dev/null 2>>error.txt || error=true
+    echo "ILoveCandy" >> /etc/pacman.conf
     sed -i "s/-j2/-j$(nproc)/;s/^#MAKEFLAGS/MAKEFLAGS/" /etc/makepkg.conf >/dev/null 2>>error.txt || error=true
     if [ "$multilib" = true ] ; then
         sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf >/dev/null 2>>error.txt || error=true
