@@ -38,6 +38,11 @@ partition_disk() {
             bootdev="${disk}1"
             rootdev="${disk}2"
         fi
+
+        sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${disk} >/dev/null 2>>error.txt || error=true
+            g # clear the in memory partition table
+            w # write the partition table
+EOF
     else
         final_disk="$(lsblk -r ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
         if [ "${disk::8}" == "/dev/nvm" ]; then
@@ -62,7 +67,6 @@ partition_disk() {
         fi
     fi
     sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${disk} >/dev/null 2>>error.txt || error=true
-    g # clear the in memory partition table
     n # new partition
     p # primary partition
     1 # partition number 1
