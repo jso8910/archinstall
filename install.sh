@@ -38,7 +38,7 @@ partition_disk() {
             bootdev="${disk}1"
             rootdev="${disk}2"
         fi
-        (echo 'g'; sleep 0.1; echo 'w') | fdisk ${disk} >/dev/null 2>>error.txt || error=true
+        (echo 'g'; sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
 EOF
     else
         final_disk="$(lsblk -r ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
@@ -68,7 +68,7 @@ EOF
         echo 't'; sleep 0.1; echo ''; sleep 0.1; echo 'uefi'; sleep 0.1; 
         echo 'n'; sleep 0.1; echo ''; sleep 0.1;
         echo ''; sleep 0.1; echo ''; sleep 0.1;
-        sleep 0.1; echo 'w') | fdisk ${disk} >/dev/null 2>>error.txt || error=true
+        sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
     showresult
 }
 
