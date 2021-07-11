@@ -68,15 +68,14 @@ EOF
     fi
     sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${disk} >/dev/null 2>>error.txt || error=true
     n # new partition
-    p # primary partition
-    1 # partition number 1
+      # partition number default
       # default - start at beginning of disk 
     +500M # 100 MB boot parttion
     t # Change type
+      # Default partition
     uefi # Type
     n # new partition
-    p # primary partition
-    2 # partion number 2
+      # partion number default
       # default, start immediately after preceding partition
       # default, extend partition to end of disk
     w # write the partition table
