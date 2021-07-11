@@ -30,7 +30,7 @@ check() {
 partition_disk() {
     echo "Partitioning disk"
 
-    if [ wipe = true ]; then
+    if [ $wipe = true ]; then
         if [ "${disk::8}" == "/dev/nvm" ] ; then
             bootdev="${disk}p1"
             rootdev="${disk}p2"
@@ -39,7 +39,6 @@ partition_disk() {
             rootdev="${disk}2"
         fi
         (echo 'g'; sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
-EOF
     else
         final_disk="$(lsblk -o NAME -x NAME ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
         if [ "${disk::8}" == "/dev/nvm" ]; then
