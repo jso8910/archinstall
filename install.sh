@@ -222,14 +222,14 @@ add_user() {
 
 # Installing aur helper
 install_helper() {
-    if [[ ! -z $aurhelper ]]; then
+    if [[ -n $aurhelper ]]; then
         aurcmd="$(echo "$aurhelper" | sed -r 's/-(bin|git)//g')"
         echo "Installing aur helper, don't forget to enter your sudo password"
         cd /tmp >/dev/null 2>>error.txt || error=true
         sudo -u "$username" git clone "https://aur.archlinux.org/$aurhelper.git" >/dev/null 2>>error.txt || error=true
-        cd $aurhelper >/dev/null 2>>error.txt || error=true
+        cd "$aurhelper" >/dev/null 2>>error.txt || error=true
         sudo -u "$username" makepkg --noconfirm -si 2>>error.txt || error=true
-        cd
+        cd >/dev/null 2>>error.txt || error=true
         if [[ $installdotfiles = true ]]; then
             echo "Installing yadm"
             sudo -u "$username" "$aurcmd" -S --noconfirm yadm 2>>error.txt || error=true

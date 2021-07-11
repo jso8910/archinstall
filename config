@@ -1,18 +1,20 @@
-disk="/dev/nveme0n1"                                # The disk you would like to install arch on (eg /dev/sda or /dev/nvme0n1)
-kernel="linux"                                      # The name of the kernel you would like to install (eg linux, linux-lts, linux-zen)
-hostname="jason"                                    # Hostname of machine
-username="jason"                                    # Username of the main user
-timezone="US/Eastern"                               # /usr/share/zoneinfo/<region>/<location>
-locale="en_US"                                      # Your locale
-language="en_US"                                    # Your language in locale.conf
-aurhelper="paru-bin"                                # Which AUR helper do you want (just installs it from the AUR)
-installdotfiles=true                                # You need a good AUR helper for this because it installs yadm from the AUR
-dotfilesurl="https://github.com/jso8910/dotfiles"   # URL of your dotfiles repo (only used if installdotfiles=true
-multilib=true                                       # Enable the multilib repos?
-swapfilesize=16000                                  # Size of swapfile (in MB)
-userpassword="password"                             # User's password (mandatory)
-rootpassword=""                                     # Root password (blank by default)
-cryptpassword="password"                            # Encryption password (mandatory)
+#!/bin/bash
+
+export disk="/dev/nveme0n1"                                # The disk you would like to install arch on (eg /dev/sda or /dev/nvme0n1)
+export kernel="linux"                                      # The name of the kernel you would like to install (eg linux, linux-lts, linux-zen)
+export hostname="jason"                                    # Hostname of machine
+export username="jason"                                    # Username of the main user
+export timezone="US/Eastern"                               # /usr/share/zoneinfo/<region>/<location>
+export locale="en_US"                                      # Your locale
+export language="en_US"                                    # Your language in locale.conf
+export aurhelper="paru-bin"                                # Which AUR helper do you want (just installs it from the AUR)
+export installdotfiles=true                                # You need a good AUR helper for this because it installs yadm from the AUR
+export dotfilesurl="https://github.com/jso8910/dotfiles"   # URL of your dotfiles repo (only used if installdotfiles=true
+export multilib=true                                       # Enable the multilib repos?
+export swapfilesize=16000                                  # Size of swapfile (in MB)
+export userpassword="password"                             # User's password (mandatory)
+export rootpassword=""                                     # Root password (blank by default)
+export cryptpassword="password"                            # Encryption password (mandatory)
 
 # Partition layout example
 # /dev/sda1: /boot
