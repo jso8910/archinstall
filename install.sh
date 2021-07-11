@@ -41,7 +41,7 @@ partition_disk() {
         (echo 'g'; sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
 EOF
     else
-        final_disk="$(lsblk -r ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
+        final_disk="$(lsblk -o NAME -x NAME ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
         if [ "${disk::8}" == "/dev/nvm" ]; then
             final_disk=${final_disk:1:2}
             bootdev="${disk}p$((final_disk + 1))"
