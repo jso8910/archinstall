@@ -2,23 +2,16 @@
 
 # This script is heavily inspired by and even copies from https://github.com/mietinen/archer/ at times
 
-if [[ -f "config" ]]; then
+if [ -f "config" ]; then
     . config
 else
     echo "Config file doesn't exist"
     exit 1
 fi
 
-if [ "${disk::8}" == "/dev/nvm" ] ; then
-    bootdev="${disk}p1"
-    rootdev="${disk}p2"
-else
-    bootdev="${disk}1"
-    rootdev="${disk}2"
-fi
 for var in disk kernel hostname username timezone locale language aurhelper installdotfiles dotfilesurl multilib swapfilesize userpassword rootpassword cryptpassword
 do
-    if [[ ! -v $var ]]; then
+    if [ ! -v $var ]; then
         echo "Variable $var not set"
         exit 1
     fi
@@ -36,6 +29,38 @@ check() {
 # Partitioning
 partition_disk() {
     echo "Partitioning disk"
+
+    if [ wipe = true ]; then
+        if [ "${disk::8}" == "/dev/nvm" ] ; then
+            bootdev="${disk}p1"
+            rootdev="${disk}p2"
+        else
+            bootdev="${disk}1"
+            rootdev="${disk}2"
+        fi
+    else
+        final_disk="$(lsblk -r ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
+        if [ "${disk::8}" == "/dev/nvm" ]; then
+            final_disk=${final_disk:1:2}
+            bootdev="${disk}p$((final_disk + 1))"
+            rootdev="${disk}p$((final_disk + 2))"
+        else
+            bootdev="${disk}$((final_disk + 1))"
+            rootdev="${disk}$((final_disk + 2))"
+        fi
+        b_free="$(sfdisk --list-free ${disk} | grep -o -P '(?<=, ).*(?=bytes)' | xargs)"
+        mb_free="$(( b_free / 1000000 ))"
+
+        if [ $((mb_free - swapfilesize - 500)) -lt 1 ]; then
+            printf '\e[1;31m[ERROR]\n  The space remaining on your disk is smaller than required (not enough for swapfile and boot partition). The installer will now exit.\e[m\n'
+            exit 1
+        elif [ $((mb_free - 500)) -lt 12000 ]; then
+            printf ' \e[1;33m[WARNING]\n  The space remaining on your disk is smaller than recommended (less than 12GB for the root partition not including the swapfile)\n  Do you want to continue?\e[m\n'
+            printf '\e[1mExit installer? [y/N]\e[m\n'
+            read -r exit
+            [ "$exit" != "${exit#[Yy]}" ] && exit 1
+        fi
+    fi
     sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${disk} >/dev/null 2>>error.txt || error=true
     g # clear the in memory partition table
     n # new partition
@@ -222,7 +247,7 @@ add_user() {
 
 # Installing aur helper
 install_helper() {
-    if [[ -n $aurhelper ]]; then
+    if [ -n $aurhelper ]; then
         aurcmd="$(echo "$aurhelper" | sed -r 's/-(bin|git)//g')"
         echo "Installing aur helper, don't forget to enter your sudo password"
         cd /tmp >/dev/null 2>>error.txt || error=true
@@ -230,7 +255,7 @@ install_helper() {
         cd "$aurhelper" >/dev/null 2>>error.txt || error=true
         sudo -u "$username" makepkg --noconfirm -si 2>>error.txt || error=true
         cd >/dev/null 2>>error.txt || error=true
-        if [[ $installdotfiles = true ]]; then
+        if [ $installdotfiles = true ]; then
             echo "Installing yadm"
             sudo -u "$username" "$aurcmd" -S --noconfirm yadm 2>>error.txt || error=true
         fi
@@ -240,11 +265,11 @@ install_helper() {
 
 # Installing dotfiles
 install_dotfiles() {
-    if [[ $installdotfiles = true ]]; then
+    if [ $installdotfiles = true ]; then
         echo "Installing dotfiles"
         sudo -u "$username" yadm clone $dotfilesurl
         echo "This is mostly for me but running /home/$username/scripts/install.sh"
-        if [[ -f "/home/$username/scripts/install.sh" ]]; then
+        if [ -f "/home/$username/scripts/install.sh" ]; then
             sudo -u "$username" zsh "/home/$username/scripts/install.sh"
         fi
     fi
@@ -268,7 +293,7 @@ showresult() {
         cat error.txt 2>/dev/null
         printf '\e[1mExit installer? [y/N]\e[m\n'
         read -r exit
-        [ "$exit" != "${exit#[Yy]}" ] && exit
+        [ "$exit" != "${exit#[Yy]}" ] && exit 1
     else
         printf ' \e[1;32m[OK]\e[m\n'
     fi

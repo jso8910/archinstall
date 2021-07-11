@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export disk="/dev/nveme0n1"                                # The disk you would like to install arch on (eg /dev/sda or /dev/nvme0n1)
+export wipe=true                                           # Do you want to wipe the disk? If you don't, it will just default to two more partitions
 export kernel="linux"                                      # The name of the kernel you would like to install (eg linux, linux-lts, linux-zen)
 export hostname="jason"                                    # Hostname of machine
 export username="jason"                                    # Username of the main user
