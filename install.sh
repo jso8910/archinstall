@@ -38,10 +38,7 @@ partition_disk() {
             bootdev="${disk}1"
             rootdev="${disk}2"
         fi
-
-        sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${disk} >/dev/null 2>>error.txt || error=true
-            g # clear the in memory partition table
-            w # write the partition table
+        (echo 'g'; sleep 0.1; echo 'w') | fdisk ${disk} >/dev/null 2>>error.txt || error=true
 EOF
     else
         final_disk="$(lsblk -r ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
@@ -66,20 +63,12 @@ EOF
             [ "$exit" != "${exit#[Yy]}" ] && exit 1
         fi
     fi
-    sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${disk} >/dev/null 2>>error.txt || error=true
-    n # new partition
-      # partition number default
-      # default - start at beginning of disk 
-    +500M # 100 MB boot parttion
-    t # Change type
-      # Default partition
-    uefi # Type
-    n # new partition
-      # partion number default
-      # default, start immediately after preceding partition
-      # default, extend partition to end of disk
-    w # write the partition table
-EOF
+    (echo 'n'; sleep 0.1; echo ''; sleep 0.1; echo ''; sleep 0.1;
+        echo '+500M'; sleep 0.1; echo 't'; sleep 0.1;
+        echo 't'; sleep 0.1; echo ''; sleep 0.1; echo 'uefi'; sleep 0.1; 
+        echo 'n'; sleep 0.1; echo ''; sleep 0.1;
+        echo ''; sleep 0.1; echo ''; sleep 0.1;
+        sleep 0.1; echo 'w') | fdisk ${disk} >/dev/null 2>>error.txt || error=true
     showresult
 }
 
