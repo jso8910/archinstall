@@ -288,7 +288,7 @@ add_user() {
 iso_part() {
     if [[ $isopart = true ]]; then
         echo "Downloading iso"
-        wget $isourl -o /root/iso >/dev/null 2>>error.txt || error=true
+        wget $isourl -O /root/iso >/dev/null 2>>error.txt || error=true
         echo "Flashing iso"
         dd if=/root/iso of=$isodev bs=1M status=progress || error=true
         showresult
