@@ -17,6 +17,43 @@ do
     fi
 done
 
+
+if [ $wipe = true ]; then
+    if [ "${disk::8}" == "/dev/nvm" ] ; then
+        bootdev="${disk}p1"
+        rootdev="${disk}p2"
+        if [[ $isopart = true ]]; then 
+            rootdev="${disk}p3"
+            isodev="${disk}p2"
+        fi
+    else
+        bootdev="${disk}1"
+        rootdev="${disk}2"
+        if [[ $isopart = true ]]; then 
+            rootdev="${disk}3"
+            isodev="${disk}2"
+        fi
+    fi
+else
+    final_disk="$(lsblk -o NAME -x NAME ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
+    if [ "${disk::8}" == "/dev/nvm" ]; then
+        final_disk=${final_disk:1:2}
+        bootdev="${disk}p$((final_disk + 1))"
+        rootdev="${disk}p$((final_disk + 2))"
+        if [[ $isopart = true ]]; then 
+            rootdev="${disk}p$((final_disk + 3))"
+            isodev="${disk}p$((final_disk + 2))"
+        fi
+    else
+        bootdev="${disk}$((final_disk + 1))"
+        rootdev="${disk}$((final_disk + 2))"
+        if [[ $isopart = true ]]; then 
+            rootdev="${disk}$((final_disk + 3))"
+            isodev="${disk}$((final_disk + 2))"
+        fi
+    fi
+fi
+
 # Run at launch
 check() {
     if [ ! "$(uname -n)" = "archiso" ]; then
@@ -61,40 +98,8 @@ partition_disk() {
     echo "Partitioning disk"
 
     if [ $wipe = true ]; then
-        if [ "${disk::8}" == "/dev/nvm" ] ; then
-            bootdev="${disk}p1"
-            rootdev="${disk}p2"
-            if [[ $isopart = true ]]; then 
-                rootdev="${disk}p3"
-                isodev="${disk}p2"
-            fi
-        else
-            bootdev="${disk}1"
-            rootdev="${disk}2"
-            if [[ $isopart = true ]]; then 
-                rootdev="${disk}3"
-                isodev="${disk}2"
-            fi
-        fi
-        (echo 'g'; sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
+        (echo 'g'; sleep 0.5; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
     else
-        final_disk="$(lsblk -o NAME -x NAME ${disk} | sed -n -e "s~^.*${disk#*/*/}~~p" | grep -o '^\S*' | tail -1)"
-        if [ "${disk::8}" == "/dev/nvm" ]; then
-            final_disk=${final_disk:1:2}
-            bootdev="${disk}p$((final_disk + 1))"
-            rootdev="${disk}p$((final_disk + 2))"
-            if [[ $isopart = true ]]; then 
-                rootdev="${disk}p$((final_disk + 3))"
-                isodev="${disk}p$((final_disk + 2))"
-            fi
-        else
-            bootdev="${disk}$((final_disk + 1))"
-            rootdev="${disk}$((final_disk + 2))"
-            if [[ $isopart = true ]]; then 
-                rootdev="${disk}$((final_disk + 3))"
-                isodev="${disk}$((final_disk + 2))"
-            fi
-        fi
         b_free="$(sfdisk --list-free ${disk} | grep -o -P '(?<=, ).*(?=bytes)' | xargs)"
         mb_free="$(( b_free / 1000000 ))"
 
@@ -199,7 +204,7 @@ run_chroot() {
     cp config /mnt/root/config
     cp install.sh /mnt/root/install.sh
     chmod +x /mnt/root/install.sh
-    arch-chroot /mnt bash -c "cd ~; isourl=$isourl isodev=$isodev /root/install.sh --chroot"
+    arch-chroot /mnt bash -c "cd ~; /root/install.sh --chroot"
     rm -f /mnt/root/install.sh \
         /mnt/root/config \
         /mnt/error.txt
