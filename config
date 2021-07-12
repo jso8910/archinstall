@@ -16,6 +16,7 @@ export swapfilesize=16000                                  # Size of swapfile (i
 export userpassword="password"                             # User's password (mandatory)
 export rootpassword=""                                     # Root password (blank by default)
 export cryptpassword="password"                            # Encryption password (mandatory)
+export isopart=true                                        # Do you want a partition for the ISO?
 
 # Partition layout example
 # /dev/sda1: /boot

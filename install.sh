@@ -9,13 +9,14 @@ else
     exit 1
 fi
 
-for var in disk kernel hostname username timezone locale language aurhelper installdotfiles dotfilesurl multilib swapfilesize userpassword rootpassword cryptpassword
+for var in disk kernel hostname username timezone locale language aurhelper installdotfiles dotfilesurl multilib swapfilesize userpassword rootpassword cryptpassword isopart
 do
     if [ ! -v $var ]; then
         echo "Variable $var not set"
         exit 1
     fi
 done
+
 # Run at launch
 check() {
     if [ ! "$(uname -n)" = "archiso" ]; then
@@ -26,6 +27,35 @@ check() {
     fi
 }
 
+# Get the URL of the ISO
+iso_url() {
+    if [ ! $isopart = true ]; then
+        return 0
+    fi
+
+    echo "Getting url and size of ISO"
+
+    downloadpage=$(curl -s https://archlinux.org/download/ | awk 'NF' 2>> error.txt || error=true)
+    md5=$(echo "$downloadpage" | grep "MD5" | grep -o -P "(?<=\</strong\> ).*(?=\</li\>)" || error=true)
+    SAVEIFS="$IFS"
+    IFS=$'\n'
+    downloadmirrors=($(echo "$downloadpage" | grep Worldwide -a4 | grep -o -P '(?<=\<a href=").*(?=")' || error=true))
+    IFS=$SAVEIFS
+
+    for (( i=1; i<=${#downloadmirrors[@]}; i++ )); do
+        export isourl="${downloadmirrors[$i]}/archlinux-$(basename ${downloadmirrors[$i]})-x86_64.iso"
+        size=$(curl -s -I $isourl | grep "Content-Length: " | awk '{print $2}' 2>> error.txt || error=true)
+        statuscode=$(curl -s -I $isourl | grep -o -P '(?<=\HTTP\/1.1 ).*(?= )' | cut -c1-3)
+        length=$(echo $length | sed -e "s/\r//")
+        mbleniso=$(( length / 1024 / 1024 ))
+        if [ $statuscode = 200 ]; then
+            thousands=$(( (mbleniso + 1000) / 1000 ))
+            export partsize=$(( thousands * 1000 + 24 * thousands ))
+            break
+        fi
+    done
+}
+
 # Partitioning
 partition_disk() {
     echo "Partitioning disk"
@@ -34,9 +64,11 @@ partition_disk() {
         if [ "${disk::8}" == "/dev/nvm" ] ; then
             bootdev="${disk}p1"
             rootdev="${disk}p2"
+            [[ $isopart = true ]] && (rootdev="${disk}p3"; isodev="${disk}p2")
         else
             bootdev="${disk}1"
             rootdev="${disk}2"
+            [[ $isopart = true ]] && (rootdev="${disk}3"; isodev="${disk}2")
         fi
         (echo 'g'; sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
     else
@@ -45,9 +77,11 @@ partition_disk() {
             final_disk=${final_disk:1:2}
             bootdev="${disk}p$((final_disk + 1))"
             rootdev="${disk}p$((final_disk + 2))"
+            [[ $isopart = true ]] && (rootdev="${disk}p$((final_disk + 3))"; isodev="${disk}p$((final_disk + 2))")
         else
             bootdev="${disk}$((final_disk + 1))"
             rootdev="${disk}$((final_disk + 2))"
+            [[ $isopart = true ]] && (rootdev="${disk}$((final_disk + 3))"; isodev="${disk}$((final_disk + 2))")
         fi
         b_free="$(sfdisk --list-free ${disk} | grep -o -P '(?<=, ).*(?=bytes)' | xargs)"
         mb_free="$(( b_free / 1000000 ))"
@@ -64,7 +98,8 @@ partition_disk() {
     fi
     (echo 'n'; sleep 0.1; echo ''; sleep 0.1; echo ''; sleep 0.1;
         echo '+500M'; sleep 0.1; echo 't'; sleep 0.1;
-        echo 't'; sleep 0.1; echo ''; sleep 0.1; echo 'uefi'; sleep 0.1; 
+        echo ''; sleep 0.1; echo 'uefi'; sleep 0.1; 
+        [[ $isopart = true ]] && (echo 'n'; sleep 1; echo ''; sleep 0.1; echo ''; sleep 0.1; echo "+$partsize"; sleep 0.1)
         echo 'n'; sleep 0.1; echo ''; sleep 0.1;
         echo ''; sleep 0.1; echo ''; sleep 0.1;
         sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
@@ -229,11 +264,22 @@ add_user() {
     sed -i '/^# %wheel ALL=(ALL) ALL/s/^#//g' /etc/sudoers >/dev/null 2>>error.txt || error=true
     sed -i '/^# %wheel ALL=(ALL) NOPASSWD: ALL/s/^#//g' /etc/sudoers >/dev/null 2>>error.txt || error=true
     printf "Defaults:%s timestamp_timeout=240" "$username" >> /etc/sudoers
-    showresult
     echo "Setting user password"
     echo -n "$username:$userpassword" | chpasswd
     echo "Setting root password"
     echo -n "root:$rootpassword" | chpasswd
+    showresult
+}
+
+# Creating iso partition
+iso_part() {
+    if [[ isopart = true ]]; then
+        echo "Downloading iso"
+        curl -s $isourl -o /root/iso >/dev/null 2>>error.txt || error=true
+        echo "Flashing iso"
+        dd if=/root/iso of=$isodev bs=1M >/dev/null 2>>error.txt || error=true
+        showresult
+    fi
 }
 
 # Installing aur helper
@@ -311,6 +357,7 @@ else
     set_pacconf
     set_bootloader
     add_user
+    iso_part
     install_helper
     install_dotfiles
     enable_service
