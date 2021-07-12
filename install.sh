@@ -64,11 +64,17 @@ partition_disk() {
         if [ "${disk::8}" == "/dev/nvm" ] ; then
             bootdev="${disk}p1"
             rootdev="${disk}p2"
-            [[ $isopart = true ]] && (rootdev="${disk}p3"; isodev="${disk}p2")
+            if [[ $isopart = true ]]; then 
+                rootdev="${disk}p3"
+                isodev="${disk}p2"
+            fi
         else
             bootdev="${disk}1"
             rootdev="${disk}2"
-            [[ $isopart = true ]] && (rootdev="${disk}3"; isodev="${disk}2")
+            if [[ $isopart = true ]]; then 
+                rootdev="${disk}3"
+                isodev="${disk}2"
+            fi
         fi
         (echo 'g'; sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
     else
@@ -77,11 +83,17 @@ partition_disk() {
             final_disk=${final_disk:1:2}
             bootdev="${disk}p$((final_disk + 1))"
             rootdev="${disk}p$((final_disk + 2))"
-            [[ $isopart = true ]] && (rootdev="${disk}p$((final_disk + 3))"; isodev="${disk}p$((final_disk + 2))")
+            if [[ $isopart = true ]]; then 
+                rootdev="${disk}p$((final_disk + 3))"
+                isodev="${disk}p$((final_disk + 2))"
+            fi
         else
             bootdev="${disk}$((final_disk + 1))"
             rootdev="${disk}$((final_disk + 2))"
-            [[ $isopart = true ]] && (rootdev="${disk}$((final_disk + 3))"; isodev="${disk}$((final_disk + 2))")
+            if [[ $isopart = true ]]; then 
+                rootdev="${disk}$((final_disk + 3))"
+                isodev="${disk}$((final_disk + 2))"
+            fi
         fi
         b_free="$(sfdisk --list-free ${disk} | grep -o -P '(?<=, ).*(?=bytes)' | xargs)"
         mb_free="$(( b_free / 1000000 ))"
@@ -99,7 +111,7 @@ partition_disk() {
     (echo 'n'; sleep 0.1; echo ''; sleep 0.1; echo ''; sleep 0.1;
         echo '+500M'; sleep 0.1; echo 't'; sleep 0.1;
         echo ''; sleep 0.1; echo 'uefi'; sleep 0.1; 
-        [[ $isopart = true ]] && (echo 'n'; sleep 1; echo ''; sleep 0.1; echo ''; sleep 0.1; echo "+$partsize"; sleep 0.1)
+        [[ $isopart = true ]] && (echo 'n'; sleep 1; echo ''; sleep 0.1; echo ''; sleep 0.1; echo "+${partsize}M"; sleep 0.1)
         echo 'n'; sleep 0.1; echo ''; sleep 0.1;
         echo ''; sleep 0.1; echo ''; sleep 0.1;
         sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
@@ -340,6 +352,7 @@ showresult() {
 
 if [ "$1" != "--chroot" ]; then
     check
+    iso_url
     partition_disk
     encrypt_disk
     format_disk
