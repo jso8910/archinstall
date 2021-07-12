@@ -188,7 +188,7 @@ reflector_run() {
 # Run pacstrap
 run_pacstrap() {
     echo "Running pacstrap"
-    pacstrap /mnt base $kernel linux-firmware btrfs-progs base-devel git dhcpcd iwd zsh >/dev/null 2>>error.txt || error=true
+    pacstrap /mnt base $kernel linux-firmware btrfs-progs base-devel git dhcpcd iwd zsh wget >/dev/null 2>>error.txt || error=true
     genfstab -U /mnt >> /mnt/etc/fstab 2>>error.txt || error=true
     showresult
 }
@@ -199,7 +199,7 @@ run_chroot() {
     cp config /mnt/root/config
     cp install.sh /mnt/root/install.sh
     chmod +x /mnt/root/install.sh
-    arch-chroot /mnt bash -c "cd ~; isodev=$isodev /root/install.sh --chroot"
+    arch-chroot /mnt bash -c "cd ~; isourl=$isourl isodev=$isodev /root/install.sh --chroot"
     rm -f /mnt/root/install.sh \
         /mnt/root/config \
         /mnt/error.txt
@@ -288,9 +288,9 @@ add_user() {
 iso_part() {
     if [[ $isopart = true ]]; then
         echo "Downloading iso"
-        curl -s $isourl -o /root/iso >/dev/null 2>>error.txt || error=true
+        wget $isourl -o /root/iso >/dev/null 2>>error.txt || error=true
         echo "Flashing iso"
-        dd if=/root/iso of=$isodev bs=1M >/dev/null 2>>error.txt || error=true
+        dd if=/root/iso of=$isodev bs=1M status=progress || error=true
         showresult
     fi
 }
