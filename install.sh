@@ -210,7 +210,7 @@ run_chroot() {
         /mnt/error.txt
 }
 
-# To be run in chroot
+# To be run in chroot.
 
 # Locales
 set_locale() {
