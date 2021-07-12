@@ -66,14 +66,14 @@ partition_disk() {
             rootdev="${disk}p2"
             if [[ $isopart = true ]]; then 
                 rootdev="${disk}p3"
-                export isodev="${disk}p2"
+                isodev="${disk}p2"
             fi
         else
             bootdev="${disk}1"
             rootdev="${disk}2"
             if [[ $isopart = true ]]; then 
                 rootdev="${disk}3"
-                export isodev="${disk}2"
+                isodev="${disk}2"
             fi
         fi
         (echo 'g'; sleep 0.1; echo 'w') | fdisk --wipe-partitions always ${disk} >/dev/null 2>>error.txt || error=true
@@ -85,14 +85,14 @@ partition_disk() {
             rootdev="${disk}p$((final_disk + 2))"
             if [[ $isopart = true ]]; then 
                 rootdev="${disk}p$((final_disk + 3))"
-                export isodev="${disk}p$((final_disk + 2))"
+                isodev="${disk}p$((final_disk + 2))"
             fi
         else
             bootdev="${disk}$((final_disk + 1))"
             rootdev="${disk}$((final_disk + 2))"
             if [[ $isopart = true ]]; then 
                 rootdev="${disk}$((final_disk + 3))"
-                export isodev="${disk}$((final_disk + 2))"
+                isodev="${disk}$((final_disk + 2))"
             fi
         fi
         b_free="$(sfdisk --list-free ${disk} | grep -o -P '(?<=, ).*(?=bytes)' | xargs)"
@@ -195,10 +195,11 @@ run_pacstrap() {
 
 # Run chroot
 run_chroot() {
+    echo 'Running chroot'
     cp config /mnt/root/config
     cp install.sh /mnt/root/install.sh
     chmod +x /mnt/root/install.sh
-    arch-chroot /mnt bash -c "cd ~; /root/install.sh --chroot"
+    arch-chroot /mnt bash -c "cd ~; isodev=$isodev /root/install.sh --chroot"
     rm -f /mnt/root/install.sh \
         /mnt/root/config \
         /mnt/error.txt
