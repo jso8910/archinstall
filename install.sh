@@ -285,7 +285,7 @@ add_user() {
 
 # Creating iso partition
 iso_part() {
-    if [[ isopart = true ]]; then
+    if [[ $isopart = true ]]; then
         echo "Downloading iso"
         curl -s $isourl -o /root/iso >/dev/null 2>>error.txt || error=true
         echo "Flashing iso"
